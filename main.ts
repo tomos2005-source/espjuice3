@@ -22,12 +22,29 @@ namespace wifiBoard {
     }
 
     /**
-     * 指定したセンサーの値を文字列で取得します。
+     * 指定したセンサーの値を数値(number)に変換して取得します。
+     * 計算や比較（～より大きいなど）に使用できます。
      */
     //% group="センサー取得"
-    //% block="$type の現在値を取得"
+    //% block="$type の値を数値で取得"
+    //% weight=110
+    export function getSensorValue(type: SensorType): number {
+        let s = getSensorData(type);
+        let n = parseFloat(s);
+        // 変換失敗（数値でない場合）は0を返す
+        if (isNaN(n)) {
+            return 0;
+        }
+        return n;
+    }
+
+    /**
+     * 指定したセンサーの値を文字列(string)で取得します。
+     */
+    //% group="センサー取得"
+    //% block="$type の現在値を文字列で取得"
     //% weight=100
-    export function getSensorData(type: SensorType): number {
+    export function getSensorData(type: SensorType): string {
         let cmd = "";
         let prefix = "";
         switch (type) {
@@ -40,7 +57,9 @@ namespace wifiBoard {
         }
         serial.writeLine(cmd);
         basic.pause(100);
-        return serial.readUntil("\n").replace(prefix, "").trim();
+        let res = serial.readUntil("\n");
+        // 接頭辞（'T1等）を取り除き、余計な空白をカット
+        return res.replace(prefix, "").trim();
     }
 
     /**
