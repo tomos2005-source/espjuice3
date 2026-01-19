@@ -27,7 +27,7 @@ namespace wifiBoard {
     //% group="センサー取得"
     //% block="$type の現在値を取得"
     //% weight=100
-    export function getSensorData(type: SensorType): string {
+    export function getSensorData(type: SensorType): number {
         let cmd = "";
         let prefix = "";
         switch (type) {
