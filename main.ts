@@ -49,7 +49,7 @@ namespace wifiBoard {
         let prefix = "";
         switch (type) {
             case SensorType.T1: cmd = "GETKIO"; prefix = "'T1"; break;
-            case SensorType.T2: cmd = "GETKIO2"; prefix = "'T2"; break;
+            case SensorType.T2: cmd = "GETONDO"; prefix = "'T2"; break;
             case SensorType.Hum: cmd = "GETSHITSU"; prefix = "'H"; break;
             case SensorType.Pres: cmd = "GETKIATSU"; prefix = "'P"; break;
             case SensorType.Lux: cmd = "GETLUX"; prefix = "'L"; break;
@@ -72,7 +72,7 @@ namespace wifiBoard {
         let cmd = "";
         switch (type) {
             case SensorType.T1: cmd = "SETKIO"; break;
-            case SensorType.T2: cmd = "SETKIO2"; break;
+            case SensorType.T2: cmd = "SETONDO"; break;
             case SensorType.Hum: cmd = "SETSHITSU"; break;
             case SensorType.Pres: cmd = "SETKIATSU"; break;
             case SensorType.Lux: cmd = "SETLUX"; break;
