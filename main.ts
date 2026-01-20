@@ -50,25 +50,16 @@ namespace wifiBoard {
             case SensorType.Dist: cmd = "GETDISTANCE"; prefix = "'D"; break;
         }
 
-        // 1. バッファの掃除（重要：前の残りを消す）
-        serial.readString();
-
-        // 2. コマンド送信
+        serial.readString(); // 受信バッファの掃除
         serial.writeString(cmd + "\r\n");
+        basic.pause(300); // ボードの計測待ち
 
-        // 3. 待ち時間（ボードがセンサーを読んで返信する時間）
-        basic.pause(300);
-
-        // 4. 行末まで読み取り
         let res = serial.readUntil("\n");
-
-        // 5. 接頭辞の削除とクリーニング
-        let cleaned = res.replace(prefix, "").replace("\r", "").trim();
-        return cleaned;
+        return res.replace(prefix, "").replace("\r", "").trim();
     }
 
     /**
-     * ボード上のメモリに値を保存します。
+     * ボード上のメモリに一時的な値を保存します。
      */
     //% group="値の一時設定"
     //% block="一時的な値を設定: $type を $value にする"
@@ -83,17 +74,13 @@ namespace wifiBoard {
             case SensorType.Lux: cmd = "SETLUX"; break;
             case SensorType.Dist: cmd = "SETDISTANCE"; break;
         }
-
-        // バッファをクリアしてから送信
-        serial.readString();
+        serial.readString(); // ゴミ掃除
         serial.writeString(cmd + " " + value.toString() + "\r\n");
-
-        // ボード側が保存処理を終えるのを待つ
-        basic.pause(200);
+        basic.pause(100);
     }
 
     /**
-     * WiFiに接続
+     * SSIDとパスワードを個別に設定し、WiFiに接続(APC)します。
      */
     //% group="WiFi設定"
     //% block="WiFiに接続 SSID:$ssid パスワード:$pwd"
@@ -104,10 +91,20 @@ namespace wifiBoard {
         serial.writeString("SETPWD " + pwd + "\r\n");
         basic.pause(300);
         serial.writeString("APC\r\n");
-        basic.pause(1000); // 接続開始には長めの待ち
+        basic.pause(1000);
     }
 
-    // --- ThingsBoard 関連 ---
+    /**
+     * ThingsBoardのアクセストークンを設定します。
+     */
+    //% group="ThingsBoard"
+    //% block="ThingsBoardトークン設定 $token"
+    //% weight=50
+    export function setToken(token: string): void {
+        serial.readString(); // 前の通信残骸を消す
+        serial.writeString("SETTOKEN " + token + "\r\n");
+        basic.pause(300);
+    }
 
     /**
      * ThingsBoardへ即時送信します。
@@ -116,13 +113,26 @@ namespace wifiBoard {
     //% block="ThingsBoardへ即時送信"
     //% weight=40
     export function sendTB(): void {
-        serial.readString(); // 送信前にゴミ掃除
+        serial.readString();
         serial.writeString("SENDTB\r\n");
-        basic.pause(1000); // 通信処理のため長めに待機
+        basic.pause(1000); // 送信処理は時間がかかるため長めに待機
     }
 
-    // 以下の関数は既存のまま
-    //% group="WiFi設定"
+    /**
+     * 自動送信の間隔を設定します。
+     */
+    //% group="ThingsBoard"
+    //% block="ThingsBoard自動送信間隔を $sec 秒にする(0で停止)"
+    //% weight=30
+    export function autoSendTB(sec: number): void {
+        serial.writeString("SENDTB " + sec.toString() + "\r\n");
+        basic.pause(200);
+    }
+
+    /**
+     * WiFi接続状態、MACアドレス等の補助機能
+     */
+    //% group="ネットワーク情報"
     //% block="WiFi接続中？"
     //% weight=70
     export function isConnected(): boolean {
@@ -131,11 +141,12 @@ namespace wifiBoard {
         return serial.readString().includes("1");
     }
 
-    //% group="WiFi設定"
-    //% block="WiFiを切断"
-    //% weight=60
-    export function disconnectWiFi(): void {
-        serial.writeString("APD\r\n");
-        basic.pause(300);
+    //% group="ネットワーク情報"
+    //% block="MACアドレスを取得"
+    //% weight=55
+    export function getMac(): string {
+        serial.writeString("MAC\r\n");
+        basic.pause(200);
+        return serial.readUntil("\n").replace("'", "").replace("\r", "").trim();
     }
 }
