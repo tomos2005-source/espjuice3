@@ -6,7 +6,8 @@
         "core": "*"
     },
     "files": [
-        "main.ts"
+        "main.ts",
+        "custom.ts"
     ],
     "testFiles": [
         "test.ts"
