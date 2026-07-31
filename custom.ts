@@ -40,14 +40,13 @@ namespace wifiBoard {
     //% weight=100
     export function getSensorData(type: SensorType): string {
         let cmd = "";
-        let prefix = "";
         switch (type) {
-            case SensorType.T1: cmd = "GETKIO"; prefix = "'T1"; break;
-            case SensorType.T2: cmd = "GETKIO2"; prefix = "'T2"; break;
-            case SensorType.Hum: cmd = "GETSHITSU"; prefix = "'H"; break;
-            case SensorType.Pres: cmd = "GETKIATSU"; prefix = "'P"; break;
-            case SensorType.Lux: cmd = "GETLUX"; prefix = "'L"; break;
-            case SensorType.Dist: cmd = "GETDISTANCE"; prefix = "'D"; break;
+            case SensorType.T1: cmd = "EJ GETKIO"; break;
+            case SensorType.T2: cmd = "EJ GETONDO"; break;
+            case SensorType.Hum: cmd = "EJ GETSHITSU"; break;
+            case SensorType.Pres: cmd = "EJ GETKIATSU"; break;
+            case SensorType.Lux: cmd = "EJ GETLUX"; break;
+            case SensorType.Dist: cmd = "EJ GETDISTANCE"; break;
         }
 
         serial.readString(); // 受信バッファの掃除
@@ -55,7 +54,8 @@ namespace wifiBoard {
         basic.pause(300); // ボードの計測待ち
 
         let res = serial.readUntil("\n");
-        return res.replace(prefix, "").replace("\r", "").trim();
+        // 仕様に基づく単一のシングルクォート除去
+        return res.replace("'", "").replace("\r", "").trim();
     }
 
     /**
@@ -67,12 +67,12 @@ namespace wifiBoard {
     export function setTempData(type: SensorType, value: number): void {
         let cmd = "";
         switch (type) {
-            case SensorType.T1: cmd = "SETKIO"; break;
-            case SensorType.T2: cmd = "SETKIO2"; break;
-            case SensorType.Hum: cmd = "SETSHITSU"; break;
-            case SensorType.Pres: cmd = "SETKIATSU"; break;
-            case SensorType.Lux: cmd = "SETLUX"; break;
-            case SensorType.Dist: cmd = "SETDISTANCE"; break;
+            case SensorType.T1: cmd = "EJ SETKIO"; break;
+            case SensorType.T2: cmd = "EJ SETONDO"; break;
+            case SensorType.Hum: cmd = "EJ SETSHITSU"; break;
+            case SensorType.Pres: cmd = "EJ SETKIATSU"; break;
+            case SensorType.Lux: cmd = "EJ SETLUX"; break;
+            case SensorType.Dist: cmd = "EJ SETDISTANCE"; break;
         }
         serial.readString(); // ゴミ掃除
         serial.writeString(cmd + " " + value.toString() + "\r\n");
@@ -86,11 +86,11 @@ namespace wifiBoard {
     //% block="WiFiに接続 SSID:$ssid パスワード:$pwd"
     //% weight=80
     export function connectWiFi(ssid: string, pwd: string): void {
-        serial.writeString("SETSSID " + ssid + "\r\n");
+        serial.writeString("EJ SETSSID " + ssid + "\r\n");
         basic.pause(300);
-        serial.writeString("SETPWD " + pwd + "\r\n");
+        serial.writeString("EJ SETPWD " + pwd + "\r\n");
         basic.pause(300);
-        serial.writeString("APC\r\n");
+        serial.writeString("EJ APC\r\n");
         basic.pause(1000);
     }
 
@@ -102,7 +102,7 @@ namespace wifiBoard {
     //% weight=50
     export function setToken(token: string): void {
         serial.readString(); // 前の通信残骸を消す
-        serial.writeString("SETTOKEN " + token + "\r\n");
+        serial.writeString("EJ SETTOKEN " + token + "\r\n");
         basic.pause(300);
     }
 
@@ -114,7 +114,7 @@ namespace wifiBoard {
     //% weight=40
     export function sendTB(): void {
         serial.readString();
-        serial.writeString("SENDTB\r\n");
+        serial.writeString("EJ SENDTB\r\n");
         basic.pause(1000); // 送信処理は時間がかかるため長めに待機
     }
 
@@ -125,27 +125,30 @@ namespace wifiBoard {
     //% block="ThingsBoard自動送信間隔を $sec 秒にする(0で停止)"
     //% weight=30
     export function autoSendTB(sec: number): void {
-        serial.writeString("SENDTB " + sec.toString() + "\r\n");
+        serial.writeString("EJ SENDTB " + sec.toString() + "\r\n");
         basic.pause(200);
     }
 
     /**
-     * WiFi接続状態、MACアドレス等の補助機能
+     * WiFi接続状態、IPアドレス等の補助機能
      */
     //% group="ネットワーク情報"
     //% block="WiFi接続中？"
     //% weight=70
     export function isConnected(): boolean {
-        serial.writeString("APS\r\n");
+        serial.writeString("EJ APS\r\n");
         basic.pause(200);
         return serial.readString().includes("1");
     }
 
+    /**
+     * 現在のIPアドレスを取得します。
+     */
     //% group="ネットワーク情報"
-    //% block="MACアドレスを取得"
+    //% block="IPアドレスを取得"
     //% weight=55
-    export function getMac(): string {
-        serial.writeString("MAC\r\n");
+    export function getIP(): string {
+        serial.writeString("EJ GETIP\r\n");
         basic.pause(200);
         return serial.readUntil("\n").replace("'", "").replace("\r", "").trim();
     }
