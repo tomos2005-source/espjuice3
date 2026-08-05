@@ -40,6 +40,26 @@ namespace wifiBoard {
         Blue
     }
 
+    export enum QueueStore {
+        //% block="LittleFS"
+        LittleFS,
+        //% block="RAM"
+        RAM
+    }
+
+    export enum OledFont {
+        //% block="5x7"
+        Font0 = 0,
+        //% block="6x12"
+        Font1 = 1,
+        //% block="8x13(標準)"
+        Font2 = 2,
+        //% block="9x15"
+        Font3 = 3,
+        //% block="10x20"
+        Font4 = 4
+    }
+
     // ============================================
     // センサー取得
     // ============================================
@@ -93,7 +113,7 @@ namespace wifiBoard {
             case SensorType.Hum: cmd = "EJ SETSHITSU"; break;
             case SensorType.Pres: cmd = "EJ SETKIATSU"; break;
             case SensorType.Lux: cmd = "EJ SETLUX"; break;
-            case SensorType.Dist: cmd = "EJ SETDISTANCE"; break;
+            case SensorType.Dist: cmd = "EJ SETDIST"; break; // 仕様書に合わせ SETDIST に修正
         }
         sendCommand(cmd + " " + value.toString(), 100);
     }
@@ -173,6 +193,16 @@ namespace wifiBoard {
     //% weight=70
     export function disconnectWiFi(): void {
         sendCommand("EJ APD", 500);
+    }
+
+    /**
+     * WiFiの自動再接続間隔を設定します。
+     */
+    //% group="WiFi設定"
+    //% block="WiFi自動再接続間隔を $min 分にする(0で無効)"
+    //% weight=60
+    export function setReconnectInterval(min: number): void {
+        sendCommand("EJ RECONNECT " + min.toString(), 200);
     }
 
     // ============================================
@@ -277,6 +307,28 @@ namespace wifiBoard {
         sendCommand("EJ CLEARQUEUE", 300);
     }
 
+    /**
+     * キュー保存先を設定します。
+     */
+    //% group="キュー管理"
+    //% block="キュー保存先を $store にする"
+    //% weight=5
+    export function setQueueStore(store: QueueStore): void {
+        let cmd = store === QueueStore.LittleFS ? "LITTLEFS" : "RAM";
+        sendCommand("EJ QUEUESTORE " + cmd, 500);
+    }
+
+    /**
+     * キュー保存先の情報を取得します。
+     */
+    //% group="キュー管理"
+    //% block="キュー保存先情報を取得"
+    //% weight=4
+    export function getQueueStore(): string {
+        return sendCommandWithResponse("EJ QUEUESTORE", 200);
+    }
+
+
     // ============================================
     // RTC時刻
     // ============================================
@@ -335,7 +387,7 @@ namespace wifiBoard {
     //% weight=30
     export function setLedColor(color: LedColor, on: boolean): void {
         let cmd = "";
-        let state = on ? "1" : "O"; // 仕様に基づく O (オー) または 0
+        let state = on ? "1" : "0"; // "O" (オー) になっていたため "0" に修正
         switch (color) {
             case LedColor.Red: cmd = "EJ LEDR" + state; break;
             case LedColor.Yellow: cmd = "EJ LEDY" + state; break;
@@ -377,6 +429,26 @@ namespace wifiBoard {
     //% weight=30
     export function setOledCursor(x: number, y: number): void {
         sendCommand("EJ OLEDCUR " + x + "," + y, 100);
+    }
+
+    /**
+     * OLEDのフォントを設定します。
+     */
+    //% group="OLED制御"
+    //% block="OLEDフォントを $font に設定"
+    //% weight=25
+    export function setOledFont(font: OledFont): void {
+        sendCommand("EJ OLEDFONT " + font.toString(), 100);
+    }
+
+    /**
+     * 現在のOLEDのフォントを取得します。
+     */
+    //% group="OLED制御"
+    //% block="現在のOLEDフォントを取得"
+    //% weight=22
+    export function getOledFont(): string {
+        return sendCommandWithResponse("EJ GETFONT", 200);
     }
 
     /**
